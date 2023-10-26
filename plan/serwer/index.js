@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker';
 import express from 'express';
 import cors from "cors";
 import { createServer } from "node:http";
+import fs from "fs";
 // import { io } from "./websocket/socket.js"
 
 const app = express();
@@ -21,8 +22,10 @@ const groups = [];
 const instructors = [];
 const rooms = [];
 
+const dataFileName = 'data.json';
+
 for (let i = 1; i <= 10; i++) {
-    const schedule = generateRanDomSchedule();
+    const schedule = generateSchedule();
     students.push({
         id: i,
         name: faker.person.fullName(),
@@ -34,7 +37,7 @@ for (let i = 1; i <= 10; i++) {
     rooms.push({ nr: `${i}`, schedule: schedule });
 }
 
-function generateRanDomSchedule() {
+function generateSchedule() {
     const schedule = [];
 
     for (let i = 1; i <= 5; i++) {
@@ -47,10 +50,38 @@ function generateRanDomSchedule() {
     return schedule;
 }
 
+function readDataFromFile() {
+    try {
+        const data = fs.readFileSync(dataFileName, 'utf-8');
+        const parsedData = JSON.parse(data);
+        students.push(...parsedData.students);
+        groups.push(...parsedData.groups);
+        instructors.push(...parsedData.instructors);
+        rooms.push(...parsedData.rooms);
+    } catch (err) {
+        
+    }
+}
+
+function saveDataToFile() {
+    const dataToSave = {
+        students,
+        groups,
+        instructors,
+        rooms
+    };
+    fs.writeFileSync(dataFileName, JSON.stringify(dataToSave, null, 2));
+}
+
+saveDataToFile();
+readDataFromFile();
+
+
 app.get('/student/:id', (req, res) => {
     const { id } = req.params;
     const { Od, Do } = req.query;
     console.time("student");
+
     if (id === 'all') {
         const allStudentSchedules = students.map(student => ({
             student: student.name,
@@ -87,6 +118,50 @@ app.get('/student/:id', (req, res) => {
     }
 });
 
+app.get('/studentjson/:id', (req, res) => {
+    const { id } = req.params;
+    const { Od, Do } = req.query;
+    console.time("studentJson");
+
+    const rawData = fs.readFileSync('data.json');
+    const data = JSON.parse(rawData);
+    const students = data.students;
+
+    if (id === 'all') {
+        const allStudentSchedules = students.map(student => ({
+            student: student.name,
+            schedule: student.schedule,
+        }));
+        res.json(allStudentSchedules);
+        console.timeEnd("studentJson");
+    } else {
+        const student = students.find(student => student.id == id);
+
+        if (!student) {
+            return res.status(404).json({ error: 'Student not found' });
+        }
+
+        if (Od && Do) {
+            const fromDate = new Date(Od);
+            const tOdate = new Date(Do);
+
+            const filteredSchedule = student.schedule.filter(item => {
+                const itemDate = new Date(item.time);
+                return itemDate >= fromDate && itemDate <= tOdate;
+            });
+
+            if (filteredSchedule.length > 0) {
+                res.json({ student: student.name, schedule: filteredSchedule });
+            } else {
+                res.status(404).json({ error: 'No events found in the specified date range' });
+                console.timeEnd("studentJson");
+            }
+        } else {
+            res.json({ student: student.name, schedule: student.schedule });
+            console.timeEnd("studentJson");
+        }
+    }
+});
 
 app.get('/grupa/:nazwa', (req, res) => {
     const { nazwa } = req.params;

@@ -4,6 +4,13 @@ import cors from "cors";
 import { createServer } from "node:http";
 import fs from "fs";
 // import { io } from "./websocket/socket.js"
+import * as protoLoader from '@grpc/proto-loader';
+import * as grpc from '@grpc/grpc-js';
+
+const packageDefinition = protoLoader.loadSync('grpc/proto/schedule.proto');
+const scheduleProto = grpc.loadPackageDefinition(packageDefinition);
+
+const client = new scheduleProto.ScheduleService('127.0.0.1:9090', grpc.ChannelCredentials.createInsecure());
 
 const app = express();
 const port = 3000;
@@ -112,7 +119,15 @@ app.get('/student/:id', (req, res) => {
                 console.timeEnd("student");
             }
         } else {
-            res.json({ student: student.name, schedule: student.schedule });
+            client.GetStudent({studentId: "1"}, (err, response) => {
+                if(err!==null){
+                    console.log(err);
+                }
+                else{
+                    res.send(response);
+                }
+            });
+            // res.json({ student: student.name, schedule: student.schedule });
             console.timeEnd("student");
         }
     }

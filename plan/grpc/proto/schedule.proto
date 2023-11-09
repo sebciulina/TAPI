@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+service ScheduleService {
+    rpc GetStudent(GetStudentRequest) returns (ScheduleMessage) {}
+}
+
+message GetStudentRequest{
+    string name = 1;
+}
+
+message ScheduleMessage {
+    string studentId = 1;
+}

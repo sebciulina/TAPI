@@ -1,0 +1,255 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Schedule API",
+    "description": "Schedule API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/"
+    }
+  ],
+  "paths": {
+    "/student/{id}": {
+      "get": {
+        "tags": [
+          "Studenci"
+        ],
+        "summary": "Wyswietlanie studentow w postaci JSON",
+        "description": "Wyswietlenie wszystkich studentow - http://localhost:3000/student/all <br /> Wyswietlanie konkretnego studenta - http://localhost:3000/student/id (Gdzie id to nr indeksu studenta) <br /> Wyswietlanie konkretnego studenta z zajeciami w przedziale datowym - http://localhost:3000/student/id?od={dataOd}&do={dataDo} <br /> Przykladowe zapytanie - localhost:3000/student/1?od=2024-03-17T22:40:36.029Z&do=2024-05-04T21:22:38.870Z",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Liczba lub all"
+          },
+          {
+            "name": "Od",
+            "description": "Data w formacie YYYY-MM-DD",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Do",
+            "description": "Data w formacie YYYY-MM-DD",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "json": {
+                "schema": {
+                  "$ref": "#/components/schemas/student"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Nie znaleziono studenta o danym id badz przedziale datowym"
+          }
+        }
+      }
+    },
+    "/studentjson/{id}": {
+      "get": {
+        "tags": [
+          "Studenci"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Od",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Do",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/grupa/{nazwa}": {
+      "get": {
+        "tags": [
+          "Grupy"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "nazwa",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Od",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Do",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/wykladowca/{id}": {
+      "get": {
+        "tags": [
+          "Wykladowcy"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Od",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Do",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/sala/{nr}": {
+      "get": {
+        "tags": [
+          "Sale"
+        ],
+        "description": "",
+        "parameters": [
+          {
+            "name": "nr",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Od",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Do",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "student": {
+        "type": "object",
+        "properties": {
+          "student": {
+            "type": "string",
+            "example": "Judy Mayer"
+          },
+          "schedule": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "time": {
+                  "type": "string",
+                  "example": "2024-07-18T11:02:41.838Z"
+                },
+                "subject": {
+                  "type": "string",
+                  "example": "bellum trepide"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

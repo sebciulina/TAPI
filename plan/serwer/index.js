@@ -6,11 +6,14 @@ import fs from "fs";
 // import { io } from "./websocket/socket.js"
 import * as protoLoader from '@grpc/proto-loader';
 import * as grpc from '@grpc/grpc-js';
+import swaggerAutogen from 'swagger-autogen';
+import swaggerUi from 'swagger-ui-express'
 
-const packageDefinition = protoLoader.loadSync('grpc/proto/schedule.proto');
-const scheduleProto = grpc.loadPackageDefinition(packageDefinition);
 
-const client = new scheduleProto.ScheduleService('127.0.0.1:9090', grpc.ChannelCredentials.createInsecure());
+// const packageDefinition = protoLoader.loadSync('grpc/proto/schedule.proto');
+// const scheduleProto = grpc.loadPackageDefinition(packageDefinition);
+
+// const client = new scheduleProto.ScheduleService('127.0.0.1:9090', grpc.ChannelCredentials.createInsecure());
 
 const app = express();
 const port = 3000;
@@ -23,6 +26,56 @@ app.use(cors({
 }));
 
 faker.seed(100);
+
+const doc = {
+    info: {
+      title: 'Schedule API',
+      description: 'Schedule API'
+    },
+    host: 'localhost:3000',
+    components: {
+        schemas: {
+            student: {
+                "student": "Judy Mayer",
+                "schedule": [
+                {
+                "time": "2024-06-01T23:30:37.008Z",
+                "subject": "speciosus cibo"
+                },
+                {
+                "time": "2024-04-15T00:48:34.167Z",
+                "subject": "currus est"
+                },
+                {
+                "time": "2024-09-19T23:31:18.754Z",
+                "subject": "arcesso abeo"
+                },
+                {
+                "time": "2024-01-12T20:04:19.990Z",
+                "subject": "animus audentia"
+                },
+                {
+                "time": "2024-07-18T11:02:41.838Z",
+                "subject": "bellum trepide"
+                }
+                ]
+                }
+                
+
+            
+        }
+    }
+  };
+
+const swaggerDocument = './swagger.json';
+const routes = ['./index.js'];
+
+const def = await swaggerAutogen({openapi: '3.0.0'})
+(swaggerDocument, routes, doc);
+
+if(def){
+   app.use('/swagger', swaggerUi.serve, swaggerUi.setup(def.data)); 
+}
 
 const students = [];
 const groups = [];
@@ -85,6 +138,24 @@ readDataFromFile();
 
 
 app.get('/student/:id', (req, res) => {
+    // #swagger.tags = ['Studenci']
+    // #swagger.summary = 'Wyswietlanie studentow w postaci JSON'
+    // #swagger.description = 'Wyswietlenie wszystkich studentow - http://localhost:3000/student/all <br /> Wyswietlanie konkretnego studenta - http://localhost:3000/student/id (Gdzie id to nr indeksu studenta) <br /> Wyswietlanie konkretnego studenta z zajeciami w przedziale datowym - http://localhost:3000/student/id?od={dataOd}&do={dataDo} <br /> Przykladowe zapytanie - localhost:3000/student/1?od=2024-03-17T22:40:36.029Z&do=2024-05-04T21:22:38.870Z'
+     /* #swagger.responses[200] = {
+            description: "Ok",
+            content: {
+                "json": {
+                    schema:{
+                        $ref: "#/components/schemas/student"
+                    }
+                }           
+            }
+        }   
+    */
+    // #swagger.responses[404] = { description: 'Nie znaleziono studenta o danym id badz przedziale datowym' }
+    // #swagger.parameters['id'] = { description: 'Liczba lub all' }
+    // #swagger.parameters['Od'] = { description: 'Data w formacie YYYY-MM-DD' }
+    // #swagger.parameters['Do'] = { description: 'Data w formacie YYYY-MM-DD' }
     const { id } = req.params;
     const { Od, Do } = req.query;
     console.time("student");
@@ -119,21 +190,22 @@ app.get('/student/:id', (req, res) => {
                 console.timeEnd("student");
             }
         } else {
-            client.GetStudent({studentId: "1"}, (err, response) => {
-                if(err!==null){
-                    console.log(err);
-                }
-                else{
-                    res.send(response);
-                }
-            });
-            // res.json({ student: student.name, schedule: student.schedule });
+            // client.GetStudent({studentId: "1"}, (err, response) => {
+            //     if(err!==null){
+            //         console.log(err);
+            //     }
+            //     else{
+            //         res.send(response);
+            //     }
+            // });
+            res.json({ student: student.name, schedule: student.schedule });
             console.timeEnd("student");
         }
     }
 });
 
 app.get('/studentjson/:id', (req, res) => {
+    // #swagger.tags = ['Studenci']
     const { id } = req.params;
     const { Od, Do } = req.query;
     console.time("studentJson");
@@ -179,6 +251,7 @@ app.get('/studentjson/:id', (req, res) => {
 });
 
 app.get('/grupa/:nazwa', (req, res) => {
+    // #swagger.tags = ['Grupy']
     const { nazwa } = req.params;
     const { Od, Do } = req.query;
     console.time("grupa");
@@ -219,6 +292,7 @@ app.get('/grupa/:nazwa', (req, res) => {
 });
 
 app.get('/wykladowca/:id', (req, res) => {
+    // #swagger.tags = ['Wykladowcy']
     const { id } = req.params;
     const { Od, Do } = req.query;
     console.time("wykladowca");
@@ -259,6 +333,7 @@ app.get('/wykladowca/:id', (req, res) => {
 });
 
 app.get('/sala/:nr', (req, res) => {
+    // #swagger.tags = ['Sale']
     const { nr } = req.params;
     const { Od, Do } = req.query;
     console.time("sala");

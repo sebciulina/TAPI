@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "server": "nodemon serwer/index.js",
+    "server": "nodemon serwer/index.js --ignore ./serwer/swagger.json",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "swagger": "node ./swagger.js"
   },
   "dependencies": {
     "@faker-js/faker": "^8.2.0",
@@ -20,7 +21,9 @@
     "nodemon": "^3.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "socket.io": "^4.7.2"
+    "socket.io": "^4.7.2",
+    "swagger-autogen": "^2.23.7",
+    "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",

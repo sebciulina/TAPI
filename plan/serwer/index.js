@@ -8,12 +8,13 @@ import * as protoLoader from '@grpc/proto-loader';
 import * as grpc from '@grpc/grpc-js';
 import swaggerAutogen from 'swagger-autogen';
 import swaggerUi from 'swagger-ui-express'
+import { gql } from 'apollo-server-express';
 
 
-// const packageDefinition = protoLoader.loadSync('grpc/proto/schedule.proto');
-// const scheduleProto = grpc.loadPackageDefinition(packageDefinition);
+const packageDefinition = protoLoader.loadSync('grpc/proto/schedule.proto');
+const scheduleProto = grpc.loadPackageDefinition(packageDefinition);
 
-// const client = new scheduleProto.ScheduleService('127.0.0.1:9090', grpc.ChannelCredentials.createInsecure());
+const client = new scheduleProto.ScheduleService('127.0.0.1:9090', grpc.ChannelCredentials.createInsecure());
 
 const app = express();
 const port = 3000;
@@ -76,6 +77,96 @@ const def = await swaggerAutogen({openapi: '3.0.0'})
 if(def){
    app.use('/swagger', swaggerUi.serve, swaggerUi.setup(def.data)); 
 }
+
+const typeDefs = gql`
+    type Student {
+        id: Int
+        name: String
+        surname: String
+        email: String
+    }
+
+    type Group {
+        id: Int
+        name: String
+        description: String
+    }
+
+    type Instructor {
+        id: Int
+        name: String
+        email: String
+    }
+
+    type Query {
+        students: [Student]
+        student(id: Int): Student
+        groups: [Group]
+        group(id: Int): Group
+        instructors: [Instructor]
+        instructor(id: Int): Instructor
+    }
+
+    type Mutation {
+        addStudent(input: StudentInput): Student
+        addGroup(input: GroupInput): Group
+        addInstructor(input: InstructorInput): Instructor
+    }
+
+    input StudentInput {
+        name: String
+        surname: String
+        email: String
+    }
+
+    input GroupInput {
+        name: String
+        description: String
+    }
+
+    input InstructorInput {
+        name: String
+        email: String
+    }
+`;
+
+const resolvers = {
+    Query: {
+        students: () => studentsData,
+        student: (parent, args) => studentsData.find(student => student.id === args.id),
+        groups: () => groupsData,
+        group: (parent, args) => groupsData.find(group => group.id === args.id),
+        instructors: () => instructorsData,
+        instructor: (parent, args) => instructorsData.find(instructor => instructor.id === args.id),
+    },
+    Mutation: {
+        addStudent: (parent, args) => {
+            const newStudent = { id: studentsData.length + 1, ...args.input };
+            studentsData.push(newStudent);
+            return newStudent;
+        },
+        addGroup: (parent, args) => {
+            const newGroup = { id: groupsData.length + 1, ...args.input };
+            groupsData.push(newGroup);
+            return newGroup;
+        },
+        addInstructor: (parent, args) => {
+            const newInstructor = { id: instructorsData.length + 1, ...args.input };
+            instructorsData.push(newInstructor);
+            return newInstructor;
+        },
+    },
+};
+
+
+const serverApollo = new ApolloServer({
+    typeDefs,
+    resolvers,
+});
+
+serverApollo.start().then(() => {
+    serverApollo.applyMiddleware({ app });
+});
 
 const students = [];
 const groups = [];
@@ -203,6 +294,61 @@ app.get('/student/:id', (req, res) => {
         }
     }
 });
+
+app.post('/student', (req, res) => {
+    const { name } = req.body;
+
+    if (!name) {
+        return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const newStudent = {
+        id: students.length + 1,
+        name: name,
+    };
+
+    students.push(newStudent);
+    saveDataToFile();
+
+    res.status(201).json(newStudent);
+});
+
+app.put('/student/:id', (req, res) => {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    const studentIndex = students.findIndex(student => student.id === parseInt(id));
+
+    if (studentIndex === -1) {
+        return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const updatedStudent = {
+        id: parseInt(id),
+        name: name || students[studentIndex].name,
+    };
+
+    students[studentIndex] = updatedStudent;
+    saveDataToFile();
+
+    res.json(updatedStudent);
+});
+
+app.delete('/student/:id', (req, res) => {
+    const { id } = req.params;
+
+    const studentIndex = students.findIndex(student => student.id === parseInt(id));
+
+    if (studentIndex === -1) {
+        return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const deletedStudent = students.splice(studentIndex, 1)[0];
+    saveDataToFile();
+
+    res.json(deletedStudent);
+});
+
 
 app.get('/studentjson/:id', (req, res) => {
     // #swagger.tags = ['Studenci']
@@ -373,6 +519,21 @@ app.get('/sala/:nr', (req, res) => {
 
         
     }
+});
+
+app.get('/grpc/student/:id', (req, res) => {
+    const { id } = req.params;
+    const request = new GetStudentRequest();
+    request.setName(id);
+
+    client.getStudent(request, (err, response) => {
+        if (err) {
+            console.error('Error:', err);
+            res.status(500).json({ error: 'Internal Server Error' });
+        } else {
+            res.json(response.toObject());
+        }
+    });
 });
 
 app.listen(port, () => {

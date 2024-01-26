@@ -1,13 +1,32 @@
-syntax = "proto3";
+message Student {
+    string id = 1;
+    string name = 2;
+}
+
+message Group {
+    string name = 1;
+    repeated Student students = 2;
+}
+
+message Instructor {
+    string id = 1;
+    string name = 2;
+}
 
 service ScheduleService {
     rpc GetStudent(GetStudentRequest) returns (ScheduleMessage) {}
+    rpc GetGroup(GetGroupRequest) returns (Group) {}
+    rpc GetInstructor(GetInstructorRequest) returns (Instructor) {}
 }
 
 message GetStudentRequest{
     string name = 1;
 }
 
-message ScheduleMessage {
-    string studentId = 1;
+message GetGroupRequest{
+    string name = 1;
+}
+
+message GetInstructorRequest{
+    string id = 1;
 }
